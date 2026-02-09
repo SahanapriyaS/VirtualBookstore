@@ -37,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        final String token = authHeader.substring(7); // remove "Bearer "
+        final String token = authHeader.substring(7); 
         String email;
         String role;
 
@@ -58,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Invalid token; let it pass (Spring Security will handle unauthorized)
+            
         }
 
         filterChain.doFilter(request, response);

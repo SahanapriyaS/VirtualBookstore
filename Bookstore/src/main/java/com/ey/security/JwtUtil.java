@@ -15,7 +15,7 @@ import io.jsonwebtoken.security.Keys;
 public class JwtUtil {
 
 	private static final String SECRET_KEY = "supersecretkeythatismorethan32bytes!";
-    private final long EXPIRATION = 1000 * 60 * 60 * 10; // 10 hours
+    private final long EXPIRATION = 1000 * 60 * 60 * 10;
 
     public String generateToken(String email, String role) {
         Map<String, Object> claims = new HashMap<>();

@@ -25,32 +25,26 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            // Disable CSRF since we are using stateless JWT tokens
             .csrf(csrf -> csrf.disable())
 
-            // No default session management; stateless JWT
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-            // Define URL-based authorization
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()                       // Login/Register endpoints
+                .requestMatchers("/auth/**").permitAll()                      
                 .requestMatchers("/api/books/**").hasAnyRole("ADMIN", "SELLER")
                 .requestMatchers("/api/customers/**").hasRole("ADMIN")
                 .requestMatchers("/api/transactions/**").hasAnyRole("BUYER", "ADMIN")
-                .anyRequest().authenticated()                                   // All other endpoints require authentication
+                .anyRequest().authenticated()                                  
             )
 
-            // Disable default login forms and HTTP basic auth
             .httpBasic(httpBasic -> httpBasic.disable())
             .formLogin(formLogin -> formLogin.disable())
 
-            // Add your JWT filter before Spring Security's default authentication
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // Password encoder for hashing user passwords
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -58,7 +52,6 @@ public class SecurityConfig {
     
     @Bean
     public UserDetailsService userDetailsService() {
-        // Return a no-op UserDetailsService to prevent Spring from creating a default user
         return username -> null;
     }
 }
