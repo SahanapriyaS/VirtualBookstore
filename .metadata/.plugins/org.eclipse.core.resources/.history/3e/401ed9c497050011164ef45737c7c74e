@@ -1,0 +1,78 @@
+package com.ey.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+import com.ey.dto.request.*;
+import com.ey.entity.*;
+import com.ey.repository.*;
+import com.ey.security.JwtUtil;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @PostMapping("/register")
+    public String register(@RequestBody SignupRequest request) {
+        Customer customer = new Customer();
+        customer.setName(request.getName());
+        customer.setEmail(request.getEmail());
+        customer.setPhone(request.getPhone());
+        customer.setCity(request.getCity());
+        customer.setAddress(request.getAddress());
+        customerRepository.save(customer);
+
+        UserRole userRole = new UserRole(customer.getId(), request.getRole().name());
+        userRoleRepository.save(userRole);
+
+        String token = jwtUtil.generateToken(customer.getEmail(), request.getRole().name());
+        return token;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
+        // 1. Find customer by email
+        Customer customer = customerRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        // 2. Verify password
+        if (!passwordEncoder.matches(request.getPassword(), customer.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid email or password");
+        }
+
+        // 3. Fetch roles
+        List<UserRole> roles = userRoleRepository.findByCustomerId(customer.getId());
+        String role = roles.isEmpty() ? "BUYER" : roles.get(0).getRoleName();
+
+        // 4. Generate JWT token
+        String token = jwtUtil.generateToken(customer.getEmail(), role);
+
+        return ResponseEntity.ok(token);
+    }
+
+
+
+
+}

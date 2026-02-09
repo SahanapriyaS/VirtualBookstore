@@ -1,0 +1,86 @@
+package com.ey.controller;
+
+
+
+import java.util.List;
+import java.util.Locale.Category;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.ey.dto.request.CreateBookRequest;
+import com.ey.dto.request.UpdateBookRequest;
+import com.ey.dto.response.BookResponse;
+import com.ey.service.BookService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/books")
+public class BookController {
+
+	private final BookService bookService;
+
+	public BookController(BookService bookService) {
+		this.bookService = bookService;
+	}
+
+	@PostMapping
+	public ResponseEntity<BookResponse> addBook(@Valid @RequestBody CreateBookRequest request) {
+
+		return bookService.addBook(request);
+	}
+
+	@GetMapping
+	public ResponseEntity<List<BookResponse>> getAllBooks() {
+		return bookService.getAllBooks();
+	}
+
+	@GetMapping("/{id}")
+	public ResponseEntity<BookResponse> getBookById(@PathVariable Long id) {
+		return bookService.getBookById(id);
+	}
+
+	@PutMapping
+	public ResponseEntity<BookResponse> updateBook(@Valid @RequestBody UpdateBookRequest request) {
+
+		return bookService.updateBook(request);
+	}
+
+	@GetMapping("/category/{category}")
+	public ResponseEntity<List<BookResponse>> getByCategory(@PathVariable Category category) {
+
+		return bookService.getByCategory(category);
+	}
+
+	@GetMapping("/search/title")
+	public ResponseEntity<List<BookResponse>> searchByTitle(@RequestParam String title) {
+
+		return bookService.searchByTitle(title);
+	}
+
+	@GetMapping("/search/author")
+	public ResponseEntity<List<BookResponse>> searchByAuthor(@RequestParam String author) {
+
+		return bookService.searchByAuthor(author);
+	}
+
+	@GetMapping("/price")
+	public ResponseEntity<List<BookResponse>> getByMaxPrice(@RequestParam Double price) {
+
+		return bookService.getByMaxPrice(price);
+	}
+
+	@GetMapping("/available")
+	public ResponseEntity<List<BookResponse>> getAvailableBooks() {
+
+		return bookService.getAvailableBooks();
+	}
+}

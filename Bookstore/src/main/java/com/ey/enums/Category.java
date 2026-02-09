@@ -1,0 +1,31 @@
+package com.ey.enums;
+
+public enum Category {
+
+    PROGRAMMING,
+    DATA_SCIENCE,
+    CLOUD_COMPUTING,
+    DEVOPS,
+
+    ACADEMIC,
+    COMPETITIVE_EXAMS,
+
+    FICTION,
+    COMICS,
+    MANGA,
+
+    BUSINESS_FINANCE,
+    ENTREPRENEURSHIP,
+    SELF_IMPROVEMENT,
+
+    HEALTH_FITNESS,
+    COOKING,
+    TRAVEL,
+
+    KIDS,
+    YOUNG_ADULT,
+
+    RELIGION_SPIRITUAL,
+    ART_DESIGN
+
+}

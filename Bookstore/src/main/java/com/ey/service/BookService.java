@@ -1,0 +1,91 @@
+package com.ey.service;
+
+import java.util.List;
+import java.util.Locale.Category;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.ey.dto.request.CreateBookRequest;
+import com.ey.dto.request.UpdateBookRequest;
+import com.ey.dto.response.BookResponse;
+import com.ey.entity.Book;
+import com.ey.exception.BookNotFoundException;
+import com.ey.exception.DuplicateBookException;
+import com.ey.mapper.BookMapper;
+import com.ey.repository.BookRepository;
+
+@Service
+public class BookService {
+
+	private final BookRepository bookRepository;
+	private final BookMapper bookMapper;
+
+	public BookService(BookRepository bookRepository, BookMapper bookMapper) {
+		this.bookRepository = bookRepository;
+		this.bookMapper = bookMapper;
+	}
+
+	public ResponseEntity<BookResponse> addBook(CreateBookRequest request) {
+		if (bookRepository.existsByTitleAndAuthor(request.getTitle(), request.getAuthor())) {
+			throw new DuplicateBookException("Book already exists");
+		}
+		Book book = bookMapper.toEntity(request);
+		Book saved = bookRepository.save(book);
+		return new ResponseEntity<>(bookMapper.toResponse(saved), HttpStatus.CREATED);
+	}
+
+	public ResponseEntity<List<BookResponse>> getAllBooks() {
+		List<BookResponse> list = bookRepository.findAll().stream().map(bookMapper::toResponse).toList();
+		return ResponseEntity.ok(list);
+	}
+
+	public ResponseEntity<BookResponse> getBookById(Long id) {
+		Book book = bookRepository.findById(id)
+				.orElseThrow(() -> new BookNotFoundException("Book not found with id: " + id));
+		return ResponseEntity.ok(bookMapper.toResponse(book));
+	}
+
+	public ResponseEntity<BookResponse> updateBook(UpdateBookRequest request) {
+		Book book = bookRepository.findById(request.getId())
+				.orElseThrow(() -> new BookNotFoundException("Book not found with id: " + request.getId()));
+		book.setTitle(request.getTitle());
+		book.setAuthor(request.getAuthor());
+		book.setCategory(request.getCategory());
+		book.setPrice(request.getPrice());
+		book.setStock(request.getStock());
+		book.setDescription(request.getDescription());
+		Book updated = bookRepository.save(book);
+		return ResponseEntity.ok(bookMapper.toResponse(updated));
+	}
+
+	public ResponseEntity<List<BookResponse>> getByCategory(Category category) {
+		List<BookResponse> list = bookRepository.findByCategory(category).stream().map(bookMapper::toResponse).toList();
+		return ResponseEntity.ok(list);
+	}
+
+	public ResponseEntity<List<BookResponse>> searchByTitle(String title) {
+		List<BookResponse> list = bookRepository.findByTitleContainingIgnoreCase(title).stream()
+				.map(bookMapper::toResponse).toList();
+		return ResponseEntity.ok(list);
+	}
+
+	public ResponseEntity<List<BookResponse>> searchByAuthor(String author) {
+		List<BookResponse> list = bookRepository.findByAuthorContainingIgnoreCase(author).stream()
+				.map(bookMapper::toResponse).toList();
+		return ResponseEntity.ok(list);
+	}
+
+	public ResponseEntity<List<BookResponse>> getByMaxPrice(Double price) {
+		List<BookResponse> list = bookRepository.findByPriceLessThanEqual(price).stream().map(bookMapper::toResponse)
+				.toList();
+		return ResponseEntity.ok(list);
+	}
+
+	public ResponseEntity<List<BookResponse>> getAvailableBooks() {
+		List<BookResponse> list = bookRepository.findByStockGreaterThan(0).stream().map(bookMapper::toResponse)
+				.toList();
+		return ResponseEntity.ok(list);
+	}
+}

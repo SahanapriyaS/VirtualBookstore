@@ -1,0 +1,73 @@
+package com.ey.service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.ey.dto.request.CreateCustomerRequest;
+import com.ey.dto.request.UpdateCustomerRequest;
+import com.ey.dto.response.CustomerResponse;
+import com.ey.entity.Customer;
+import com.ey.exception.CustomerNotFoundException;
+import com.ey.exception.CustomerValidationException;
+import com.ey.mapper.CustomerMapper;
+import com.ey.repository.CustomerRepository;
+
+@Service
+public class CustomerService {
+
+	private final CustomerRepository customerRepository;
+	private final CustomerMapper customerMapper;
+
+	public CustomerService(CustomerRepository customerRepository, CustomerMapper customerMapper) {
+		this.customerRepository = customerRepository;
+		this.customerMapper = customerMapper;
+	}
+
+	
+	public ResponseEntity<CustomerResponse> addCustomer(CreateCustomerRequest request) {
+		if (customerRepository.existsByEmail(request.getEmail())) {
+			throw new CustomerValidationException("Email already registered: " + request.getEmail());
+		}
+
+		Customer customer = customerMapper.toEntity(request);
+		Customer saved = customerRepository.save(customer);
+		CustomerResponse response = customerMapper.toResponse(saved);
+
+		return new ResponseEntity<>(response, HttpStatus.CREATED);
+	}
+
+	
+	public ResponseEntity<List<CustomerResponse>> getAllCustomers() {
+		List<Customer> customers = customerRepository.findAll();
+		List<CustomerResponse> responseList = customers.stream().map(customerMapper::toResponse)
+				.collect(Collectors.toList());
+		return ResponseEntity.ok(responseList);
+	}
+
+	
+	public ResponseEntity<CustomerResponse> getCustomerById(Long id) {
+		Customer customer = customerRepository.findById(id)
+				.orElseThrow(() -> new CustomerNotFoundException("Customer not found with id: " + id));
+		return ResponseEntity.ok(customerMapper.toResponse(customer));
+	}
+
+	
+	public ResponseEntity<CustomerResponse> updateCustomer(UpdateCustomerRequest request) {
+		Customer customer = customerRepository.findById(request.getId())
+				.orElseThrow(() -> new CustomerNotFoundException("Customer not found with id: " + request.getId()));
+
+		if (!customer.getEmail().equals(request.getEmail()) && customerRepository.existsByEmail(request.getEmail())) {
+			throw new CustomerValidationException("Email already registered: " + request.getEmail());
+		}
+
+		Customer updated = customerMapper.toEntity(request, customer);
+		Customer saved = customerRepository.save(updated);
+		CustomerResponse response = customerMapper.toResponse(saved);
+
+		return ResponseEntity.ok(response);
+	}
+}

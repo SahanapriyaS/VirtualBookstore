@@ -1,0 +1,113 @@
+package com.ey.controller;
+
+import java.util.Optional;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+import com.ey.dto.request.LoginRequest;
+import com.ey.dto.request.SignupRequest;
+import com.ey.entity.Customer;
+import com.ey.entity.UserRole;
+import com.ey.enums.Role;
+import com.ey.repository.CustomerRepository;
+import com.ey.repository.UserRoleRepository;
+import com.ey.security.JwtUtil;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+
+    private final PasswordEncoder passwordEncoder;
+    private final CustomerRepository customerRepository;
+    private final UserRoleRepository userRoleRepository;
+    private final JwtUtil jwtUtil;
+
+    public AuthController(PasswordEncoder passwordEncoder,
+                          CustomerRepository customerRepository,
+                          UserRoleRepository userRoleRepository,
+                          JwtUtil jwtUtil) {
+        this.passwordEncoder = passwordEncoder;
+        this.customerRepository = customerRepository;
+        this.userRoleRepository = userRoleRepository;
+        this.jwtUtil = jwtUtil;
+    }
+
+    // -------------------------
+    // Role-based Signups
+    // -------------------------
+
+    @PostMapping("/admin/signup")
+    public ResponseEntity<String> signupAdmin(@RequestBody SignupRequest request) {
+        return registerUser(request, Role.ADMIN);
+    }
+
+    @PostMapping("/buyer/signup")
+    public ResponseEntity<String> signupBuyer(@RequestBody SignupRequest request) {
+        return registerUser(request, Role.BUYER);
+    }
+
+    @PostMapping("/seller/signup")
+    public ResponseEntity<String> signupSeller(@RequestBody SignupRequest request) {
+        return registerUser(request, Role.SELLER);
+    }
+
+    // Unified registration logic
+    private ResponseEntity<String> registerUser(SignupRequest request, Role role) {
+
+        if (customerRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Email already registered: " + request.getEmail());
+        }
+
+        // Create customer
+        Customer customer = new Customer();
+        customer.setName(request.getName());
+        customer.setEmail(request.getEmail());
+        customer.setPhone(request.getPhone());
+        customer.setCity(request.getCity());
+        customer.setAddress(request.getAddress());
+        customer.setPassword(passwordEncoder.encode(request.getPassword())); // hash password
+        Customer savedCustomer = customerRepository.save(customer);
+
+        // Assign role
+        UserRole userRole = new UserRole();
+        userRole.setCustomerId(savedCustomer.getId());
+        userRole.setRoleName(role.name());
+        userRoleRepository.save(userRole);
+
+        // Generate JWT
+        String token = jwtUtil.generateToken(savedCustomer.getEmail(), role.name());
+        return new ResponseEntity<>(token, HttpStatus.CREATED);
+    }
+
+    // -------------------------
+    // Unified Login
+    // -------------------------
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
+
+        Optional<Customer> customerOpt = customerRepository.findByEmail(request.getEmail());
+        if (customerOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+        }
+
+        Customer customer = customerOpt.get();
+
+        // Verify password
+        if (!passwordEncoder.matches(request.getPassword(), customer.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+        }
+
+        // Get user role
+        Optional<UserRole> roleOpt = userRoleRepository.findByCustomerId(customer.getId()).stream().findFirst();
+        String role = roleOpt.map(UserRole::getRoleName).orElse(Role.BUYER.name());
+
+        // Generate JWT
+        String token = jwtUtil.generateToken(customer.getEmail(), role);
+        return ResponseEntity.ok(token);
+    }
+}

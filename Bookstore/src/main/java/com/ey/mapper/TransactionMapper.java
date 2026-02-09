@@ -1,0 +1,32 @@
+package com.ey.mapper;
+
+import org.springframework.stereotype.Component;
+
+import com.ey.dto.request.TransactionRequest;
+import com.ey.dto.response.TransactionResponse;
+import com.ey.entity.Book;
+import com.ey.entity.Customer;
+import com.ey.entity.Transaction;
+
+@Component
+public class TransactionMapper {
+
+    public Transaction toEntity(TransactionRequest request, Customer customer, Book book) {
+        Transaction transaction = new Transaction();
+        transaction.setCustomer(customer);
+        transaction.setBook(book);
+        transaction.setType(request.getType());
+        return transaction;
+    }
+
+    public TransactionResponse toResponse(Transaction transaction) {
+        return new TransactionResponse(
+            transaction.getId(),
+            transaction.getCustomer().getName(),
+            transaction.getBook().getTitle(),
+            transaction.getType(),
+            transaction.getTransactionDate(),
+            transaction.getReturnDate()
+        );
+    }
+}
