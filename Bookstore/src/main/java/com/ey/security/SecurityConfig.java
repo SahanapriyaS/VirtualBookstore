@@ -5,14 +5,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
@@ -26,20 +25,16 @@ public class SecurityConfig {
 
         http
             .csrf(csrf -> csrf.disable())
-
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()                      
-                .requestMatchers("/api/books/**").hasAnyRole("ADMIN", "SELLER")
-                .requestMatchers("/api/customers/**").hasRole("ADMIN")
-                .requestMatchers("/api/transactions/**").hasAnyRole("BUYER", "ADMIN")
-                .anyRequest().authenticated()                                  
+                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/api/books/**").hasAnyRole("ADMIN","SELLER")
+                .requestMatchers("/api/customers/**").hasAnyRole("ADMIN","BUYER")
+                .requestMatchers("/api/transactions/**").hasAnyRole("ADMIN","BUYER")
+                .anyRequest().authenticated()
             )
-
             .httpBasic(httpBasic -> httpBasic.disable())
             .formLogin(formLogin -> formLogin.disable())
-
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -48,10 +43,5 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-    
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> null;
     }
 }

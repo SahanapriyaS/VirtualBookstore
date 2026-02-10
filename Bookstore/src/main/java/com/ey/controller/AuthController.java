@@ -1,16 +1,5 @@
 package com.ey.controller;
 
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.ey.dto.request.LoginRequest;
 import com.ey.dto.request.SignupRequest;
 import com.ey.entity.Customer;
@@ -19,45 +8,39 @@ import com.ey.enums.Role;
 import com.ey.repository.CustomerRepository;
 import com.ey.repository.UserRoleRepository;
 import com.ey.security.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
-	@Autowired
+    @Autowired
     private PasswordEncoder passwordEncoder;
-	
-	@Autowired
+    @Autowired
     private CustomerRepository customerRepository;
-	
-	@Autowired
+    @Autowired
     private UserRoleRepository userRoleRepository;
-	
-	@Autowired
+    @Autowired
     private JwtUtil jwtUtil;
 
-    
-
-    @PostMapping("/admin/signup")
-    public ResponseEntity<String> signupAdmin(@RequestBody SignupRequest request) {
-        return registerUser(request, Role.ADMIN);
-    }
-
-    @PostMapping("/buyer/signup")
-    public ResponseEntity<String> signupBuyer(@RequestBody SignupRequest request) {
-        return registerUser(request, Role.BUYER);
-    }
-
-    @PostMapping("/seller/signup")
-    public ResponseEntity<String> signupSeller(@RequestBody SignupRequest request) {
-        return registerUser(request, Role.SELLER);
-    }
-
-    private ResponseEntity<String> registerUser(SignupRequest request, Role role) {
+  
+    @PostMapping("/signup/{role}")
+    public ResponseEntity<String> signup(@RequestBody SignupRequest request, @PathVariable String role) {
+        Role userRole;
+        try {
+            userRole = Role.valueOf(role.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid role: " + role);
+        }
 
         if (customerRepository.existsByEmail(request.getEmail())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Email already registered: " + request.getEmail());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email already registered");
         }
 
         Customer customer = new Customer();
@@ -66,36 +49,32 @@ public class AuthController {
         customer.setPhone(request.getPhone());
         customer.setCity(request.getCity());
         customer.setAddress(request.getAddress());
-        customer.setPassword(passwordEncoder.encode(request.getPassword())); // hash password
+        customer.setPassword(passwordEncoder.encode(request.getPassword()));
         Customer savedCustomer = customerRepository.save(customer);
 
-        UserRole userRole = new UserRole();
-        userRole.setCustomerId(savedCustomer.getId());
-        userRole.setRoleName(role.name());
-        userRoleRepository.save(userRole);
+        UserRole ur = new UserRole();
+        ur.setCustomerId(savedCustomer.getId());
+        ur.setRoleName(userRole.name());
+        userRoleRepository.save(ur);
 
-        String token = jwtUtil.generateToken(savedCustomer.getEmail(), role.name());
-        return new ResponseEntity<>(token, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
     }
 
-  
-
+   
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest request) {
-
         Optional<Customer> customerOpt = customerRepository.findByEmail(request.getEmail());
-        if (customerOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
-        }
+        if (customerOpt.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
 
         Customer customer = customerOpt.get();
-
-        if (!passwordEncoder.matches(request.getPassword(), customer.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), customer.getPassword()))
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
-        }
 
-        Optional<UserRole> roleOpt = userRoleRepository.findByCustomerId(customer.getId()).stream().findFirst();
-        String role = roleOpt.map(UserRole::getRoleName).orElse(Role.BUYER.name());
+        String role = userRoleRepository.findByCustomerId(customer.getId())
+                        .stream()
+                        .findFirst()
+                        .map(UserRole::getRoleName)
+                        .orElse(Role.BUYER.name());
 
         String token = jwtUtil.generateToken(customer.getEmail(), role);
         return ResponseEntity.ok(token);
