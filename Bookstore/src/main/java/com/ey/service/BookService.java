@@ -1,7 +1,6 @@
 package com.ey.service;
 
 import java.util.List;
-import java.util.Locale.Category;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +10,7 @@ import com.ey.dto.request.CreateBookRequest;
 import com.ey.dto.request.UpdateBookRequest;
 import com.ey.dto.response.BookResponse;
 import com.ey.entity.Book;
+import com.ey.enums.Category;
 import com.ey.exception.BookNotFoundException;
 import com.ey.exception.DuplicateBookException;
 import com.ey.mapper.BookMapper;
