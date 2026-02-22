@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><testrun name="AuthControllerTest" project="Bookstore" tests="3" started="3" failures="0" errors="0" ignored="0">
-  <testsuite name="com.ey.controller.AuthControllerTest" time="0.575" displayname="AuthControllerTest" uniqueid="[engine:junit-jupiter]/[class:com.ey.controller.AuthControllerTest]">
-    <testcase name="login_ok_returnsRawToken" classname="com.ey.controller.AuthControllerTest" time="0.543" displayname="login_ok_returnsRawToken()" uniqueid="[engine:junit-jupiter]/[class:com.ey.controller.AuthControllerTest]/[method:login_ok_returnsRawToken()]"/>
-    <testcase name="login_wrongPassword_401" classname="com.ey.controller.AuthControllerTest" time="0.012" displayname="login_wrongPassword_401()" uniqueid="[engine:junit-jupiter]/[class:com.ey.controller.AuthControllerTest]/[method:login_wrongPassword_401()]"/>
-    <testcase name="login_unknownEmail_401" classname="com.ey.controller.AuthControllerTest" time="0.015" displayname="login_unknownEmail_401()" uniqueid="[engine:junit-jupiter]/[class:com.ey.controller.AuthControllerTest]/[method:login_unknownEmail_401()]"/>
-  </testsuite>
-</testrun>

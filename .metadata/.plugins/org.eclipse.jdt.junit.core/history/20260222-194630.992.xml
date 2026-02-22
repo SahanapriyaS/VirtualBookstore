@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><testrun name="BookServiceTest" project="Bookstore" tests="4" started="4" failures="0" errors="0" ignored="0">
-  <testsuite name="com.ey.service.BookServiceTest" time="3.726" displayname="BookServiceTest" uniqueid="[engine:junit-jupiter]/[class:com.ey.service.BookServiceTest]">
-    <testcase name="addBook_shouldThrow_whenDuplicate" classname="com.ey.service.BookServiceTest" time="3.543" displayname="addBook_shouldThrow_whenDuplicate()" uniqueid="[engine:junit-jupiter]/[class:com.ey.service.BookServiceTest]/[method:addBook_shouldThrow_whenDuplicate()]"/>
-    <testcase name="updateBook_shouldModifyExisting" classname="com.ey.service.BookServiceTest" time="0.127" displayname="updateBook_shouldModifyExisting()" uniqueid="[engine:junit-jupiter]/[class:com.ey.service.BookServiceTest]/[method:updateBook_shouldModifyExisting()]"/>
-    <testcase name="addBook_shouldCreate_whenNotDuplicate" classname="com.ey.service.BookServiceTest" time="0.019" displayname="addBook_shouldCreate_whenNotDuplicate()" uniqueid="[engine:junit-jupiter]/[class:com.ey.service.BookServiceTest]/[method:addBook_shouldCreate_whenNotDuplicate()]"/>
-    <testcase name="getByCategory_shouldReturnList" classname="com.ey.service.BookServiceTest" time="0.036" displayname="getByCategory_shouldReturnList()" uniqueid="[engine:junit-jupiter]/[class:com.ey.service.BookServiceTest]/[method:getByCategory_shouldReturnList()]"/>
-  </testsuite>
-</testrun>

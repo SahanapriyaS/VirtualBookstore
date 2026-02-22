@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><testrun name="TransactionServiceTest" project="Bookstore" tests="5" started="5" failures="0" errors="0" ignored="0">
-  <testsuite name="com.ey.service.TransactionServiceTest" time="1.305" displayname="TransactionServiceTest" uniqueid="[engine:junit-jupiter]/[class:com.ey.service.TransactionServiceTest]">
-    <testcase name="borrow_shouldFail_whenCityNotAllowed" classname="com.ey.service.TransactionServiceTest" time="1.213" displayname="borrow_shouldFail_whenCityNotAllowed()" uniqueid="[engine:junit-jupiter]/[class:com.ey.service.TransactionServiceTest]/[method:borrow_shouldFail_whenCityNotAllowed()]"/>
-    <testcase name="borrow_shouldSucceed_whenStockAndCityOk" classname="com.ey.service.TransactionServiceTest" time="0.071" displayname="borrow_shouldSucceed_whenStockAndCityOk()" uniqueid="[engine:junit-jupiter]/[class:com.ey.service.TransactionServiceTest]/[method:borrow_shouldSucceed_whenStockAndCityOk()]"/>
-    <testcase name="returnBook_shouldIncrementStock_andSetReturnDate" classname="com.ey.service.TransactionServiceTest" time="0.013" displayname="returnBook_shouldIncrementStock_andSetReturnDate()" uniqueid="[engine:junit-jupiter]/[class:com.ey.service.TransactionServiceTest]/[method:returnBook_shouldIncrementStock_andSetReturnDate()]"/>
-    <testcase name="returnBook_shouldFail_whenNotFound" classname="com.ey.service.TransactionServiceTest" time="0.002" displayname="returnBook_shouldFail_whenNotFound()" uniqueid="[engine:junit-jupiter]/[class:com.ey.service.TransactionServiceTest]/[method:returnBook_shouldFail_whenNotFound()]"/>
-    <testcase name="borrow_shouldFail_whenOutOfStock" classname="com.ey.service.TransactionServiceTest" time="0.003" displayname="borrow_shouldFail_whenOutOfStock()" uniqueid="[engine:junit-jupiter]/[class:com.ey.service.TransactionServiceTest]/[method:borrow_shouldFail_whenOutOfStock()]"/>
-  </testsuite>
-</testrun>
