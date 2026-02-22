@@ -1,5 +1,6 @@
 package com.ey.service;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,6 +15,7 @@ import com.ey.entity.Book;
 import com.ey.entity.Customer;
 import com.ey.entity.Transaction;
 import com.ey.enums.TransactionType;
+import com.ey.exception.AlreadyReturnedException;
 import com.ey.exception.BookNotFoundException;
 import com.ey.exception.BorrowNotAllowedException;
 import com.ey.exception.CustomerNotFoundException;
@@ -88,6 +90,32 @@ public class TransactionService {
 		Transaction transaction = transactionRepository.findById(id)
 				.orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 		return ResponseEntity.ok(transactionMapper.toResponse(transaction));
+	}
+	
+	
+
+	public ResponseEntity<TransactionResponse> returnBook(Long transactionId) {
+
+	    Transaction transaction = transactionRepository.findById(transactionId)
+	            .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + transactionId));
+
+	    if (transaction.getType() != TransactionType.BORROW) {
+	        throw new IllegalStateException("Only BORROW transactions can be returned");
+	    }
+
+	    if (transaction.getReturnDate() != null) {
+	        throw new AlreadyReturnedException("This book was already returned for transaction id: " + transactionId);
+	    }
+
+	    Book book = transaction.getBook();
+	    book.setStock(book.getStock() + 1);
+	    bookRepository.save(book);
+
+	    transaction.setReturnDate(LocalDateTime.now());
+	    Transaction saved = transactionRepository.save(transaction);
+
+	    TransactionResponse response = transactionMapper.toResponse(saved);
+	    return ResponseEntity.ok(response);
 	}
 }
 

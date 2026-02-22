@@ -1,0 +1,10 @@
+spring.application.name=Bookstore
+
+spring.datasource.url = jdbc:mysql://localhost:3306/virtual_bookstore_db
+spring.datasource.username = root
+spring.datasource.password = root
+
+spring.jpa.hibernate.ddl-auto = update
+spring.jpa.show-sql = true
+
+jwt.secret = x4F7G9kL2pQ7sV8yT1wZ3cB6mN0qR5uH2aD9kL3sF8pQ2tY6vW1xZ3cB7nM9rT2u

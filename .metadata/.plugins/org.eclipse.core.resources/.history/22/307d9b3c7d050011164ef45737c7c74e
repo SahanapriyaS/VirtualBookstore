@@ -1,5 +1,0 @@
-package com.ey.repository;
-
-public interface BookRepository {
-
-}

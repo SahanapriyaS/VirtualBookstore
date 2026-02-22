@@ -56,5 +56,14 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<Object> handleCustomerValidation(TransactionNotFoundException ex) {
 		return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
 	}
+	@ExceptionHandler(AlreadyReturnedException.class)
+	public ResponseEntity<Object> handleAlreadyReturned(AlreadyReturnedException ex) {
+	    return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(IllegalStateException.class)
+	public ResponseEntity<Object> handleIllegalState(IllegalStateException ex) {
+	    return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+	}
 
 }

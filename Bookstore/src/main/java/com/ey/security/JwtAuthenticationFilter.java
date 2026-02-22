@@ -12,10 +12,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final JwtUtil jwtUtil;
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil) {
@@ -31,17 +34,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             try {
-                if (!jwtUtil.isTokenExpired(token)) {
-                    String username = jwtUtil.extractUsername(token);
-                    String role = jwtUtil.extractRole(token);
-                    List<SimpleGrantedAuthority> authorities = List.of(
-                            new SimpleGrantedAuthority("ROLE_" + role)
-                    );
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(username, null, authorities);
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (jwtUtil.isTokenExpired(token)) {
+                    log.warn("JWT expired for path {}.", request.getRequestURI());
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
                 }
+                String username = jwtUtil.extractUsername(token);
+                String role = jwtUtil.extractRole(token);
+
+                List<SimpleGrantedAuthority> authorities =
+                        List.of(new SimpleGrantedAuthority("ROLE_" + role));
+
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(username, null, authorities);
+
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+
             } catch (Exception e) {
+                log.error("JWT validation failed for path {}: {}", request.getRequestURI(), e.getMessage(), e);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }

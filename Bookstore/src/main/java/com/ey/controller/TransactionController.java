@@ -42,4 +42,9 @@ public class TransactionController {
 	public ResponseEntity<TransactionResponse> getTransactionById(@PathVariable Long id) {
 		return transactionService.getTransactionById(id);
 	}
+	
+	@PostMapping("/return/{transactionId}")
+	public ResponseEntity<TransactionResponse> returnBook(@PathVariable Long transactionId) {
+	    return transactionService.returnBook(transactionId);
+	}
 }

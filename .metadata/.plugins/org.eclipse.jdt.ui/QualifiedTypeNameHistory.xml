@@ -2,8 +2,9 @@
 <qualifiedTypeNameHistroy>
     <fullyQualifiedTypeName name="com.ey.entity.Transaction"/>
     <fullyQualifiedTypeName name="com.ey.entity.Book"/>
-    <fullyQualifiedTypeName name="com.ey.enums.Category"/>
     <fullyQualifiedTypeName name="org.springframework.web.cors.UrlBasedCorsConfigurationSource"/>
     <fullyQualifiedTypeName name="java.util.List"/>
     <fullyQualifiedTypeName name="org.springframework.web.cors.CorsConfigurationSource"/>
+    <fullyQualifiedTypeName name="com.ey.enums.Category"/>
+    <fullyQualifiedTypeName name="java.util.Date"/>
 </qualifiedTypeNameHistroy>

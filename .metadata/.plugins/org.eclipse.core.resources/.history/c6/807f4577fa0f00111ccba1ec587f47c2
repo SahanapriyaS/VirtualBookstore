@@ -1,0 +1,156 @@
+package com.ey.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
+
+import com.ey.dto.request.TransactionRequest;
+import com.ey.dto.response.TransactionResponse;
+import com.ey.entity.Book;
+import com.ey.entity.Customer;
+import com.ey.entity.Transaction;
+import com.ey.enums.TransactionType;
+import com.ey.exception.BorrowNotAllowedException;
+import com.ey.exception.OutOfStockException;
+import com.ey.exception.TransactionNotFoundException;
+import com.ey.mapper.TransactionMapper;
+import com.ey.repository.BookRepository;
+import com.ey.repository.CustomerRepository;
+import com.ey.repository.TransactionRepository;
+
+class TransactionServiceTest {
+
+    private TransactionRepository transactionRepository;
+    private BookRepository bookRepository;
+    private CustomerRepository customerRepository;
+    private TransactionMapper transactionMapper;
+
+    private TransactionService transactionService;
+
+    @BeforeEach
+    void setUp() {
+        transactionRepository = mock(TransactionRepository.class);
+        bookRepository = mock(BookRepository.class);
+        customerRepository = mock(CustomerRepository.class);
+        transactionMapper = new TransactionMapper();
+
+        transactionService = new TransactionService(
+                transactionRepository, bookRepository, customerRepository, transactionMapper);
+    }
+
+    @Test
+    void borrow_shouldSucceed_whenStockAndCityOk() {
+        TransactionRequest req = new TransactionRequest();
+        req.setCustomerId(1L);
+        req.setBookId(2L);
+        req.setType(TransactionType.BORROW);
+
+        Customer cust = new Customer();
+        cust.setId(1L);
+        cust.setCity("Chennai");
+
+        Book book = new Book();
+        book.setId(2L);
+        book.setTitle("DevOps");
+        book.setStock(3);
+
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(cust));
+        when(bookRepository.findById(2L)).thenReturn(Optional.of(book));
+        when(bookRepository.save(any(Book.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Transaction saved = new Transaction();
+        saved.setCustomer(cust);
+        saved.setBook(book);
+        saved.setType(TransactionType.BORROW);
+        saved.setTransactionDate(LocalDateTime.now());
+
+        when(transactionRepository.save(any(Transaction.class))).thenReturn(saved);
+
+        ResponseEntity<TransactionResponse> resp = transactionService.createTransaction(req);
+
+        assertThat(resp.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().getType()).isEqualTo(TransactionType.BORROW);
+        verify(bookRepository).save(argThat(b -> b.getStock() == 2)); // decremented
+    }
+
+    @Test
+    void borrow_shouldFail_whenCityNotAllowed() {
+        TransactionRequest req = new TransactionRequest();
+        req.setCustomerId(1L);
+        req.setBookId(2L);
+        req.setType(TransactionType.BORROW);
+
+        Customer cust = new Customer(); cust.setId(1L); cust.setCity("Delhi");
+        Book book = new Book(); book.setId(2L); book.setTitle("DevOps"); book.setStock(3);
+
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(cust));
+        when(bookRepository.findById(2L)).thenReturn(Optional.of(book));
+
+        assertThatThrownBy(() -> transactionService.createTransaction(req))
+                .isInstanceOf(BorrowNotAllowedException.class);
+
+        verify(transactionRepository, never()).save(any());
+    }
+
+    @Test
+    void borrow_shouldFail_whenOutOfStock() {
+        TransactionRequest req = new TransactionRequest();
+        req.setCustomerId(1L);
+        req.setBookId(2L);
+        req.setType(TransactionType.BORROW);
+
+        Customer cust = new Customer(); cust.setId(1L); cust.setCity("Chennai");
+        Book book = new Book(); book.setId(2L); book.setTitle("DevOps"); book.setStock(0);
+
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(cust));
+        when(bookRepository.findById(2L)).thenReturn(Optional.of(book));
+
+        assertThatThrownBy(() -> transactionService.createTransaction(req))
+                .isInstanceOf(OutOfStockException.class);
+
+        verify(transactionRepository, never()).save(any());
+    }
+
+    @Test
+    void returnBook_shouldIncrementStock_andSetReturnDate() {
+        Customer cust = new Customer(); cust.setId(1L); cust.setCity("Chennai");
+        Book book = new Book(); book.setId(2L); book.setTitle("DevOps"); book.setStock(0);
+
+        Transaction tx = new Transaction();
+        tx.setCustomer(cust);
+        tx.setBook(book);
+        tx.setType(TransactionType.BORROW);
+        tx.setTransactionDate(LocalDateTime.now());
+        tx.setReturnDate(null);
+
+        when(transactionRepository.findById(50L)).thenReturn(Optional.of(tx));
+        when(bookRepository.save(any(Book.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var resp = transactionService.returnBook(50L);
+
+        assertThat(resp.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(resp.getBody().getReturnDate()).isNotNull();
+        assertThat(book.getStock()).isEqualTo(1); // incremented
+    }
+
+    @Test
+    void returnBook_shouldFail_whenNotFound() {
+        when(transactionRepository.findById(999L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> transactionService.returnBook(999L))
+                .isInstanceOf(TransactionNotFoundException.class);
+    }
+}
